@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if True %} <!-- change for old auth -->
+
+<h1>Stonks</h1>
+<p style='color: lightgray'>This is a gambling game (no real money anywhere in sight) created by <a href='https://replit.com/@rafrafraf'>@rafrafraf</a> and <a href='https://replit.com/@MarcusWeinberger'>@MarcusWeinberger</a>.</p>
+
+<hr>
+<center>
+{% for m in msgs %}
+<h2 style='color: red'>{{ m }}</h2>
+{% endfor %}
+
+<script src='//auth.marcusj.tech/auth.js' authed='postAuth'></script>
+
+<br>
+
+<h3>Forgot password? <a href='https://auth.marcusj.tech'>Click here!</a></h3>
+
+<hr>
+
+<h2>How to play</h2>
+
+<ol>
+    <li>Place your bets at the start of the round</li>
+    <li>Watch the multiplier rise</li>
+    <li>Cashout before the rocket crashes, or lose your money</li>
+    <li>If you cashed out in time, you receive your initial bet multiplied by the number your cashed out at</li>
+</ol>
+
+<script>
+
+function do_form(route, data) {
+    form = document.createElement('form');
+    form.style.display = 'none';
+    form.action = route;
+    form.method = 'POST';
+    for (name in data) {
+        e = document.createElement('input');
+        e.name = name;
+        e.value = data[name];
+        form.appendChild(e);
+    }
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function postAuth(user) {
+    do_form('/auth', {
+        'token': user.token
+    })
+}
+
+</script>
+
+{% else %}
+<div style='display: flex; align-items: center; justify-content: center; margin-bottom: 30px;'>
+    <button onclick='$("#login").toggle(); $("#signup").hide();'>Login</button>
+    <button onclick='$("#signup").toggle(); $("#login").hide();'>Signup</button>
+</div>
+
+<form id='login' action='/login' method='POST' style='display: none'>
+    <label for='username'>Username:</label>
+    <input name='username'>
+    <br>
+    <label for='password'>Password:</label>
+    <input name='password' type='password'>
+    <br>
+    <button type="submit">Login</button>
+</form>
+
+<form id='signup' action='/signup' method='POST' style='display: none' onsubmit='validate()'>
+    <label for='username'>Username:</label>
+    <input name='username'>
+    <br>
+    <label for='password'>Password:</label>
+    <input name='password' type='password'>
+    <input type='checkbox' onclick="togglePw(this)"> Show password
+    <br>
+    <button type="submit">Signup</button>
+</form>
+</center>
+
+<script>
+    function vaildate(event) {
+        form = $('#signup');
+        if (!form.find('input[name=password]').val() == form.find('input[name=confirm_password]').val()) {
+            event.preventDefault();
+            $('#pw_confirm').text("Passwords don't match");
+        }
+    }
+
+    function togglePw(cb) {
+        pwbox = $('#signup').find('input[name=password]')[0];
+        if ($(cb).is(":checked")) {
+            pwbox.type = 'text';
+        } else {
+            pwbox.type = 'password';
+        }
+    }
+</script>
+{% endif %}
+
+{% endblock %}

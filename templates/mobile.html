@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class='sendcont'>
+    <div class='send'>
+        <label for='sendto'>Send to:</label>
+        <input name='sendto' placeholder="Username...">
+        <label for='sendamount'>Amount:</label>
+        <input name='sendamount' type='number' min="0">
+        <button id='sendMoneyBtn' onclick='doSendMoney()'>Send</button>
+        <button id='cancelBtn' onclick='$(".sendcont").fadeOut()'>Cancel</button>
+    </div>
+    </div>
+</div>
+
+<div class='sidebar'>
+    <div style='display: flex; max-height: calc(100vh - 140px); flex-direction: column; margin-top: 30px;'>
+        <div id='analytics'></div>
+        <ul>
+            <li><a href='/logout'>Logout</a></li>
+            <li><a href='#' onclick='newTab("https://auth.marcusj.tech")'>Manage account</a></li>
+            <li><a href='#' onclick='newTab("/leaderboard")'>Leaderboard</a></li>
+            <li><a href='#' onclick='$(".sendcont").fadeIn()'>Send money</a></li>
+            <li><a href='#' onclick="doRedeem()">Redeem</a></li>
+        </ul>
+
+        <div style='display: block; overflow-y: scroll;'>
+            <table id='playerBets'>
+                <tr>
+                    <th><b>User</b></th>
+                    <th><b>Amount</b></th>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class='sidebtn' onclick='opensidebar()'><i class="fas fa-bars fa-lg"></i></div>
+</div>
+
+<script>
+function doRedeem() {
+    var rcode = prompt("Enter code");
+    if (rcode) {
+        window.location.href = "/redeem?key=" + rcode;
+    }
+}
+</script>
+
+<div class='error'>error</div>
+
+<div id='countdown'></div>
+
+<div class='overlay'> 
+    <textarea class='chat' style='cursor: default; padding-top: 80px;' readonly>
+    </textarea>
+    <div class='msgbox'><input id='msg' style='flex-grow: 2;' placeholder='start typing here' /><button>send</button></div>
+</div>
+
+<div class='topmid'>
+<div class='top'>
+    <div style='width: 50%; position: absolute; right: 0;'>
+        <h3 style='margin: 0 0; font-size: 18px; text-align: right; margin-right: 4px; margin-top: 3px;'>
+            Balance: <span style='color: green'>$</span><span id='balance' style='color: green;'></span>
+        </h3>
+    </div>    
+</div>
+
+
+<div class='middle'>
+    <div class='rain' style='transform: rotateY(180deg); position: absolute; width: 200px; height: 200px; top: calc(50% - 100px); left: calc(50% - 100px); overflow: hidden; visibility: hidden;'>
+        <canvas></canvas>
+    </div>
+    <div id='rolling' style='visibility: hidden; position: absolute; top: 55%; user-select: none; max-width: 90px; overflow: visible; left: 50%; transform: translateX(-50%); white-space: nowrap;'>
+        <h3 style='margin: 3px 8px;'>
+            Rolling: <span style='color: green' id='rolling-num'>1.00</span>
+        </h3>
+    </div>
+
+    <div class='cont' style='width: fit-content; position: absolute; left: calc(50% - 25px); top: calc(50% - 25px); visibility: hidden;'>
+        <div class='container'>
+            <div class="red flame"></div>
+            <div class="orange flame"></div>
+            <div class="yellow flame"></div>
+            <div class="white flame"></div>
+            <div class="blue circle"></div>
+            <div class'black circle'></div>
+        </div>
+        <div class='rocket' style='transform: rotate(-45deg); width: fit-content;'><i style='background: linear-gradient(to right, #9097a3, #dde2eb);-webkit-background-clip: text; color: transparent;' class="fas fa-rocket fa-3x"></i></div>
+    </div>
+</div>
+</div>
+
+<script>
+const canvas = document.querySelector("canvas");
+
+let { innerHeight: height, innerWidth: width } = window;
+canvas.width = width;
+canvas.height = height;
+
+const context = canvas.getContext("2d");
+
+// max color is used for the portion of the rgb components
+// the idea is to have brighter blues as the lines are drawn lower and to the right
+const maxColor = 100;
+
+// distance between successive lines
+let spacing = 20;
+let lineWidth = 0.2;
+
+// limit for requestAnimationFrame
+let drawTime;
+let drawInterval = 60;
+
+// odds of drawing a line
+let threshold = 0.8;
+const odds = () => Math.random() > threshold;
+
+function resize() {
+	width = window.innerWidth;
+	height = window.innerHeight;
+	canvas.width = width;
+	canvas.height = height;
+}
+
+function draw() {
+	context.clearRect(0, 0, width, height);
+	context.lineWidth = lineWidth;
+	for (let x = 0; x < width; x += spacing) {
+		for (let y = 0; y < height; y += spacing) {
+			const color =
+				Math.min(Math.ceil((maxColor / 2 / width) * x), maxColor / 2) +
+				Math.min(Math.ceil((maxColor / 2 / height) * y), maxColor / 2);
+			context.strokeStyle = `white`;
+			if (odds()) {
+				context.beginPath();
+				context.moveTo(x, y);
+				context.lineTo(x + spacing, y + spacing);
+				context.closePath();
+				context.stroke();
+			}
+		}
+	}
+}
+
+window.addEventListener("resize", () => {
+	resize();
+});
+
+function animate(timestamp) {
+	if (!drawTime) {
+		drawTime = timestamp;
+	} else {
+		const elapsedTime = timestamp - drawTime;
+		if (elapsedTime > drawInterval) {
+			draw();
+			drawTime = null;
+		}
+	}
+
+	window.requestAnimationFrame(animate);
+}
+
+animate();
+
+const map = ({ value, min, max, minRange, maxRange }) =>
+	minRange + (maxRange - minRange) * ((value - min) / (max - min));
+
+
+</script>
+
+<div class='bottom'>
+    <div class='amt'>
+        <div class='wrapper'>
+            <div style='color: green; position: absolute; padding: 10px; font-size: 18px; font-weight: 600;'>$</div>
+            <input style='font-size: 18px; text-indent: 18px;' type='number' value='5' id='amount' />
+            <div>
+                <button style='font-size: 15px;' onclick='changebet(false);'>-25%</button>
+                <button style='font-size: 15px;' onclick='changebet()'>+25%</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="ripple bet" data-ripple-color="#ffffff">bet</button>
+</div>
+
+<script>
+const user = '{{ user["username"] }}';
+const token = '{{ user["token"] }}';
+balance = {{ user["balance"] }};
+has_bet = false;
+has_cashout = false;
+betval = 0;
+
+const socket = io();
+
+socket.on('countdown', (seconds) => {
+    globalThis.cdnum = seconds;
+    globalThis.cdint = setInterval(function() {
+        $('#countdown').text(cdnum);
+        if (!$('#countdown').hasClass('counting')) {
+            $('#countdown').addClass('counting');
+        }
+        if (cdnum >= 1) {
+            cdnum--;
+        }
+    }, 1000);
+    betbtn();
+})
+
+socket.on('starting', function() {
+    try {
+        clearInterval(cdint);
+    }
+    catch(err) {
+        // suck my balls
+    }
+    $('#countdown').removeClass('counting');
+    $('#rolling').css('visibility', 'visible');
+})
+
+socket.on('rolling', (i) => {
+    if (!$('#rolling').is(':visible')) {
+        $('#rolling').css('visibility', 'visible');
+    }
+    if (!has_cashout) {
+        cashoutbtn();
+    }
+    if (!has_bet && !has_cashout) {
+        skippedbtn();
+    }
+    $('.cont').css('visibility', 'visible');
+    $('.rain').css('visibility', 'visible');
+    $('#rolling-num').text(i);
+    $('#rolling-num')[0].style = 'color: green';
+})
+
+socket.on('crash', (bets) => {
+    $('#rolling-num')[0].style = 'color: red';
+    explodeRocket();
+    if (!has_cashout && has_bet) {
+        lostbtn(betval);
+    }
+
+    setTimeout(() => {
+        $('#playerBets').empty();
+        $('#playerBets').append($(`
+            <tr>
+                <th><b>User</b></th>
+                <th><b>Amount</b></th>
+            </tr>
+        `));
+    }, 2500);
+
+    for (const [player, bet_amount] of Object.entries(bets)) {
+        message(`[-] {${player}} missed their chance and lost $${parseInt(bet_amount / 100)}!`);
+    }
+
+    has_cashout = false;
+    has_bet = false;
+})
+
+socket.on('usercashout', (data) => {
+    message(`[*] {${data.username}} cashed out at ${data.multiplier}x and won \$${parseInt(((data.out / 100) - betval)*100)/100}`);
+
+    try {
+        $(`.${data['username']}`).parent().find('.userBet').text(`${data['out'] / 100} (x${data['multiplier']})`)[0].style = 'color: green';
+    } catch(err) {
+        console.log("It did it again:", err);
+    }
+})
+
+socket.on('chatmsg', (data) => {
+    message(`[${data.username}] > ${data.msg}`);
+})
+
+socket.on('usercancelbet', (data) => {
+    message(`[*] {${data.user}} cancelled their bet`);
+    
+    $(`.${data.user}`).parent().remove();
+})
+
+socket.on('userbet', (data) => {
+    message(`[*] {${data.username}} bet \$${data.bet / 100}`);
+    $('#playerBets').append($(`
+        <tr>
+            <td class='${data['username']}'>${data['username']}</td>
+            <td class='userBet'>${data['bet'] / 100}</td>
+        </tr>
+    `));
+})
+
+socket.on('recvmoney', (data) => {
+    if (data.to == user) {
+        error(`Recieved \$${data.amount} from ${data.from}`, color='green');
+        balance = balance + data.amount;
+        $('#balance').text(displayNumber(balance / 100, 2));
+    }
+})
+
+function newTab(url) {
+    var win = window.open(url, '_blank');
+    win.focus();
+}
+
+/*
+function displayNumber(amount, decimal) {
+    n = amount;
+    d = decimal;
+    x = (''+n).length,p=Math.pow,d=p(10,d);
+    x -= x%3;
+    return Math.round(n*d/p(10,x))/d+" kMGTPE"[x/3];
+}
+*/
+function displayNumber(amount, decimal) {
+    return amount.toString();
+}
+
+$(function() {
+    $('#balance').text(displayNumber(balance / 100, 2));
+})
+
+function placeBet(amount) {
+    waitingbtn();
+    socket.emit('bet', {
+        'username': user,
+        'token': token,
+        'bet': amount * 100
+    }, (res) => {
+        console.log(res)
+        if (res['status']) {
+            cancelbtn()
+            balance = balance - (amount * 100);
+            $('#balance').text(displayNumber(balance / 100, 2));
+            has_bet = true;
+            betval = amount;
+        } else {
+            betbtn();
+            error(res['msg']);
+        }
+    })
+}
+
+function cashoutBet() {
+    waitingbtn(txt='Cashing<br>out...');
+    socket.emit('cashout', {
+        'username': user,
+        'token': token,
+    }, (res) => {
+        if (res['status']) {
+            wonbtn(parseInt(((res['res'] / 100) - betval)*100)/100);
+            balance = balance + res['res'];
+            $('#balance').text(displayNumber(balance / 100, 2));
+            has_cashout = true;
+            has_bet = false;
+        } else {
+            error(res['res']);
+            cashoutbtn();
+        }
+    })
+}
+
+function cancelBet() {
+    waitingbtn(txt='Cancelling<br>bet...');
+    socket.emit('cancelbet', {
+        'username': user,
+        'token': token,
+    }, (res) => {
+        if (res['status']) {
+            error('Bet cancelled', color='green');
+            balance = balance + res['res'];
+            $('#balance').text(displayNumber(balance / 100, 2));
+            has_bet = false;
+            betbtn();
+        } else {
+            error(res['res']);
+        }
+    })
+}
+
+function sendMsg(text) {
+    socket.emit('sendmsg', {
+        'username': user,
+        'token': token,
+        'msg': text,
+    }, (res) => {
+        if (res['status']) {
+            $('#msg').val('');
+        } else {
+            error(res['msg']);
+        }
+    })
+}
+
+function sendMoney(to, amount) {
+    socket.emit('transfer', {
+        'username': user,
+        'token': token,
+        'to': to,
+        'amount': amount * 100,
+    }, (res) => {
+        if (res['res']) {
+            error(res['msg'], color='green');
+            balance = balance - (amount * 100);
+            $('#balance').text(displayNumber(balance / 100, 2));
+        } else {
+            error(res['msg']);
+        }
+    })
+}
+
+function doSendMoney() {
+    to = $('input[name=sendto]').val();
+    amount = $('input[name=sendamount]').val();
+    sendMoney(to, amount);
+    $('.sendcont').fadeOut();
+}
+
+$('#msg').enterKey(function() {
+    sendMsg($('#msg').val());
+})
+
+$('#amount').enterKey(function() {
+    $('.bet').click();
+})
+
+$('input[name=sendamount]').enterKey(function() {
+    $('#sendMoneyBtn').click();
+})
+
+$('input[name=sendto]').enterKey(function() {
+    $('#sendMoneyBtn').click();
+})
+
+</script>
+{% endblock %}
