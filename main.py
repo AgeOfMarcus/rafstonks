@@ -211,9 +211,9 @@ class Stonks(object):
     
     def roller(self):
         self.allow_bets = True
-        socketio.emit('countdown', 5, broadcast=True)
+        socketio.emit('countdown', 5)
         time.sleep(6)
-        socketio.emit('starting', broadcast=True)
+        socketio.emit('starting')
         tg = self.make_range()
         if random.randint(1, 100) == 27:
             tg = tg * 2
@@ -223,7 +223,7 @@ class Stonks(object):
         while True:
             if self.bets == {}:
                 sleep = 0.03
-            socketio.emit('rolling', self.get_current(), broadcast=True)
+            socketio.emit('rolling', self.get_current())
             self.current += 0.01
             time.sleep(sleep)
 
@@ -231,7 +231,7 @@ class Stonks(object):
                 break
 
         self.current = 1.0
-        socketio.emit('crash', self.bets, broadcast=True)
+        socketio.emit('crash', self.bets)
         db['house balance'] = db['house balance'] + sum(self.bets.values())
         self.bets = {}
         time.sleep(3)
@@ -296,7 +296,7 @@ def s_bet(json):
     if res[0]:
         user['balance'] -= bet
         db[user['username']] = user
-        socketio.emit('userbet', {'username': user['username'], 'bet': bet}, broadcast=True)
+        socketio.emit('userbet', {'username': user['username'], 'bet': bet})
     return {
         'status': res[0],
         'msg': res[1],
@@ -310,7 +310,7 @@ def s_cancelbet(json):
     if status:
         user['balance'] += res
         db[user['username']] = user
-        socketio.emit('usercancelbet', {'user': user['username']}, broadcast=True)
+        socketio.emit('usercancelbet', {'user': user['username']})
     return {'status': status, 'res': res}
 
 @socketio.on('cashout')
@@ -321,7 +321,7 @@ def s_cashout(json):
     if res:
         user['balance'] += out
         db[user['username']] = user
-        socketio.emit('usercashout', {'username': user['username'], 'out': out, 'multiplier': stonks.get_current()}, broadcast=True)
+        socketio.emit('usercashout', {'username': user['username'], 'out': out, 'multiplier': stonks.get_current()})
 
     return {
         'status': res,
@@ -352,7 +352,7 @@ def s_transfer(json):
         db[json['to']] = tg
         user['balance'] = user['balance'] - amount
         db[user['username']] = user
-        socketio.emit('recvmoney', {'from': user['username'], 'to': json['to'], 'amount': json['amount']}, broadcast=True) # bad 
+        socketio.emit('recvmoney', {'from': user['username'], 'to': json['to'], 'amount': json['amount']}) # bad 
         return {'res': True, 'msg': 'Transfer successful'}
     return {'res': False, 'msg': 'Target user not found'}
 
@@ -368,7 +368,7 @@ def s_sendmsg(json):
         return {'status': False, 'msg': 'Your message must be under 256 characters'}
     if not all([c in (string.ascii_lowercase + string.ascii_uppercase + string.digits + '.,:@()- +=_$%*&~#?/!') for c in msg]):
         return {'status': False, 'msg': 'Your message contains invalid characters'}
-    socketio.emit('chatmsg', {'username': user['username'], 'msg': msg}, broadcast=True)
+    socketio.emit('chatmsg', {'username': user['username'], 'msg': msg})
     return {'status': True, 'msg': 'Delivered'}
 
 # ---------------------- rewards 
