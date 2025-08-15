@@ -1,0 +1,7 @@
+Flask
+Flask-Mobility
+Flask-SocketIO
+gevent
+gevent-websocket
+python-dotenv
+requests

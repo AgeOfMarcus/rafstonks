@@ -1,11 +1,13 @@
+from dotenv import load_dotenv
+load_dotenv()
 from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask, request, render_template, session, redirect
-from replit.database import to_primitive
+#from replit.database import to_primitive
 from flask_socketio import SocketIO
 from flask_mobility import Mobility
-from replit import db
+#from replit import db
 import requests
 import logging
 import hashlib
@@ -18,6 +20,8 @@ import os
 import math
 
 from gevent.pool import Pool
+
+db = {} #TODO: NEEDS REPLACING WITH CUSTOM SQLITE INTEGRATION
 
 thread = None
 _pool = None
@@ -77,7 +81,7 @@ def app_mobile():
 @app.route('/auth', methods=['POST'])
 def app_dupl_auth():
     token = request.form['token']
-    user = requests.post('https://auth.marcusj.tech/api/user', data = {
+    user = requests.post('https://auth.marcusj.org/api/user', data = {
         'token': token,
     }).json()['user']
     if not db.get(user['USERNAME']):
@@ -87,8 +91,8 @@ def app_dupl_auth():
         }
     tkn = str(uuid.uuid4())
     db[user['USERNAME']] = {**db[user['USERNAME']], 'token': tkn}
-    user_sess = to_primitive(db[user['USERNAME']])
-    user_sess['promos'] = to_primitive(user_sess['promos'])
+    user_sess = db[user['USERNAME']]
+    user_sess['promos'] = user_sess.get('promos', [])
     session['user'] = user_sess
     return redirect(f'https://{request.host}')
 
