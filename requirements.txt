@@ -5,3 +5,4 @@ gevent
 gevent-websocket
 python-dotenv
 requests
+pocketbase==0.10.0
